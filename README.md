@@ -1,6 +1,6 @@
 # Multi-Omics Cancer Classification using CRO and xAI
 
-This repository contains the code and resources for a thesis on **Multi-Omics Cancer Classification using Distributed Chemical Reaction Optimization (DC-CRO) and Explainable AI (xAI)**.
+This repository contains the code and resources for a thesis on **Multi-Omics Cancer Classification using Diversity Controlled Chemical Reaction Optimization (DC-CRO) and Explainable AI (xAI)**.
 
 ## 📌 Project Overview
 The objective of this research is to classify breast cancer (BRCA) subtypes using multi-omics data (RNA-Seq, Copy Number Variation, Mutation, and Protein expression) and optimize the classification process using Chemical Reaction Optimization (CRO) for feature selection.
@@ -41,5 +41,5 @@ XGBoost emerged as the best-performing model across all targets. The full result
    ```
 
 ## 🔮 Next Steps (Week 2)
-- Implementation of the **Distributed Chemical Reaction Optimization (DC-CRO)** skeleton.
+- Implementation of the **Diversity Controlled Chemical Reaction Optimization (DC-CRO)** skeleton.
 - Feature selection using CRO to improve the performance of weaker models on imbalanced targets.
