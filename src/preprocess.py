@@ -13,19 +13,16 @@ def load_data(path="data/brca_data_w_subtypes.csv"):
 
 def deduplicate_columns(df):
     """
-    Checks for and removes duplicate columns based on column names.
-    Note: Pandas automatically appends .1, .2 to duplicate names during loading,
-    so this checks for exact name duplicates if any persist or are manually added.
+    Removes columns with identical content (not just identical names).
+    Pandas auto-renames duplicate column names on CSV load (.1, .2 suffixes),
+    but 99 cn_ columns have identical values because they represent genes at
+    the same chromosomal locus with identical copy-number profiles.
+    This content-based dedup reduces features from 1,936 → 1,837.
     """
-    seen = set()
-    to_drop = []
-    for col in df.columns:
-        if col in seen:
-            to_drop.append(col)
-        else:
-            seen.add(col)
-    df_dedup = df.drop(columns=to_drop)
-    print(f"Removed {len(to_drop)} duplicate columns.")
+    shape_before = df.shape[1]
+    df_dedup = df.T.drop_duplicates().T
+    removed = shape_before - df_dedup.shape[1]
+    print(f"Removed {removed} content-duplicate columns. Shape: {df_dedup.shape}")
     return df_dedup
 
 def inspect_targets(df):
@@ -100,6 +97,12 @@ def apply_smote(X_train, y_train, random_state=42):
     sm = SMOTE(random_state=random_state)
     X_train_res, y_train_res = sm.fit_resample(X_train, y_train)
     return X_train_res, y_train_res
+
+def save_feature_names(feature_names, target_name, out_dir="outputs/preprocessed"):
+    """Saves feature column names as a numpy array for SHAP plot labels."""
+    os.makedirs(out_dir, exist_ok=True)
+    np.save(f"{out_dir}/{target_name}_feature_names.npy", np.array(feature_names))
+    print(f"Saved {len(feature_names)} feature names for {target_name}")
 
 def save_processed(X_train, X_test, y_train, y_test, target_name, out_dir="outputs/preprocessed"):
     """Saves the processed numpy arrays for future use (like DC-CRO)."""

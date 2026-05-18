@@ -3,7 +3,7 @@ import pandas as pd
 from src.utils import set_seed
 from src.preprocess import (load_data, deduplicate_columns, inspect_targets, save_cleaned_data,
                             separate_features_targets, encode_target, split_data, scale_features, 
-                            apply_smote, save_processed)
+                            apply_smote, save_processed, save_feature_names)
 from src.baseline import run_baselines, results_to_dataframe
 
 def main():
@@ -28,6 +28,9 @@ def main():
         
         # Separate features and the current target
         X, y = separate_features_targets(df, target)
+        
+        # Save feature names for SHAP explainability plots later
+        save_feature_names(X.columns.tolist(), target)
         
         # Encode target labels to numbers
         y_enc = encode_target(y, target)
