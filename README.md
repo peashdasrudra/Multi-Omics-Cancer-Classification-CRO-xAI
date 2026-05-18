@@ -1,224 +1,462 @@
-# Multi-Omics Breast Cancer Classification using DC-CRO and Explainable AI
+<div align="center">
 
-> **Thesis Project** — Classifying breast cancer subtypes from integrated multi-omics data using Diversity-Controlled Chemical Reaction Optimization (DC-CRO) for feature selection and Explainable AI (xAI) for model interpretability.
+# 🧬 Multi-Omics Breast Cancer Classification
 
----
+### *DC-CRO Feature Selection × Explainable AI*
 
-## Table of Contents
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.x-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
+[![XGBoost](https://img.shields.io/badge/XGBoost-Latest-006600?style=for-the-badge)](https://xgboost.readthedocs.io)
+[![License](https://img.shields.io/badge/License-Academic-purple?style=for-the-badge)](#license)
 
-- [Overview](#overview)
-- [Dataset](#dataset)
-- [Methodology](#methodology)
-- [Project Structure](#project-structure)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Baseline Results](#baseline-results)
-- [Roadmap](#roadmap)
-- [License](#license)
+<br/>
 
----
+> **Classifying breast cancer subtypes from integrated multi-omics data using Diversity-Controlled Chemical Reaction Optimization (DC-CRO) for feature selection and SHAP-based Explainable AI for model interpretability.**
 
-## Overview
+<br/>
 
-High-dimensional multi-omics data holds immense promise for precision oncology, yet the sheer number of features (**1,800+** molecular markers) introduces noise, redundancy, and the curse of dimensionality. This thesis addresses the problem in three stages:
-
-1. **Baseline Establishment** — Benchmark standard classifiers on the full feature set with rigorous cross-validation to quantify the performance ceiling without feature selection.
-2. **DC-CRO Feature Selection** — Apply a Diversity-Controlled Chemical Reaction Optimization metaheuristic to discover compact, high-performance feature subsets.
-3. **Explainable AI** — Use SHAP-based explanations to interpret the selected features and provide biologically meaningful insights for clinical decision-making.
+```
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║   705 Patients  ·  1,837 Features  ·  4 Omics Layers  ·  3 Targets   ║
+  ╚══════════════════════════════════════════════════════════════════╝
+```
 
 ---
 
-## Dataset
+</div>
 
-| Property | Value |
-|---|---|
-| **Source** | TCGA Breast Cancer (BRCA) cohort |
-| **Samples** | ~1,000 patients |
-| **Omics Layers** | RNA-Seq gene expression, Copy Number Variation (CNV), Somatic Mutations, Protein expression (RPPA) |
-| **Raw Features** | 1,936 molecular features |
-| **After Deduplication** | 1,837 unique features (99 content-duplicate CNV columns removed) |
-| **Clinical Targets** | ER Status, HER2 Final Status, Histological Type |
+## 📋 Table of Contents
 
-The raw data file (`data/brca_data_w_subtypes.csv`) integrates all four omics layers with clinical annotations.
+<details>
+<summary>Click to expand</summary>
+
+- [🔬 Overview](#-overview)
+- [📊 Dataset](#-dataset)
+- [⚙️ Methodology](#️-methodology)
+- [🏆 Baseline Results](#-baseline-results)
+- [📁 Project Structure](#-project-structure)
+- [🚀 Quick Start](#-quick-start)
+- [🗺️ Roadmap](#️-roadmap)
+- [🔄 Reproducibility](#-reproducibility)
+- [📜 License](#-license)
+
+</details>
 
 ---
 
-## Methodology
+## 🔬 Overview
+
+High-dimensional multi-omics data holds immense promise for **precision oncology**, yet the sheer number of features (1,800+ molecular markers) introduces noise, redundancy, and the curse of dimensionality.
+
+This thesis tackles the challenge through a **three-stage pipeline**:
+
+<table>
+<tr>
+<td width="33%" align="center">
+
+### 🎯 Stage 1
+**Baseline Benchmarking**
+
+Evaluate RF, SVM & XGBoost on the full feature set with leakage-free cross-validation
+
+</td>
+<td width="33%" align="center">
+
+### ⚡ Stage 2
+**DC-CRO Feature Selection**
+
+Discover compact, high-performance feature subsets via metaheuristic optimization
+
+</td>
+<td width="33%" align="center">
+
+### 🔍 Stage 3
+**Explainable AI**
+
+SHAP-based interpretation for biologically meaningful clinical insights
+
+</td>
+</tr>
+</table>
+
+---
+
+## 📊 Dataset
+
+<table>
+<tr><td>
+
+| | Detail |
+|:---|:---|
+| 🏥 **Source** | TCGA Breast Cancer (BRCA) Cohort |
+| 👥 **Samples** | 705 patients |
+| 🔬 **Omics Layers** | RNA-Seq · CNV · Somatic Mutations · Protein (RPPA) |
+| 📐 **Raw Features** | 1,936 molecular features |
+| ✂️ **After Dedup** | **1,837** unique features (99 content-duplicate CNV columns removed) |
+
+</td><td>
+
+**Clinical Targets:**
+
+| Target | Type | Classes |
+|:---|:---|:---|
+| `ER.Status` | Binary | Positive / Negative |
+| `HER2.Final.Status` | Binary | Positive / Negative |
+| `histological.type` | Multi-class | IDC / ILC / Other |
+
+</td></tr>
+</table>
+
+> 📂 Raw data: `data/brca_data_w_subtypes.csv` — integrates all four omics layers with clinical annotations.
+
+---
+
+## ⚙️ Methodology
 
 ### Preprocessing Pipeline
 
 ```
-Raw CSV ──► Content-Based Deduplication ──► Target Encoding ──► Train/Test Split (80/20, Stratified)
-                                                                        │
-                                                                        ▼
-                                                               StandardScaler (fit on train only)
-                                                                        │
-                                                                        ▼
-                                                               SMOTE Oversampling (train only)
+                    ┌─────────────────────────────────────────────────────────┐
+                    │              PREPROCESSING PIPELINE                     │
+                    └─────────────────────────────────────────────────────────┘
+
+    ┌──────────┐     ┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+    │ Raw CSV  │────▶│  Content    │────▶│   Target     │────▶│  80 / 20    │
+    │ (1,936)  │     │  Dedup      │     │  Encoding    │     │  Stratified │
+    └──────────┘     │  (→ 1,837)  │     └──────────────┘     │  Split      │
+                     └─────────────┘                          └──────┬──────┘
+                                                                     │
+                                                    ┌────────────────┼────────────────┐
+                                                    ▼                                 ▼
+                                            ┌──────────────┐                 ┌──────────────┐
+                                            │  Train Set   │                 │  Test Set    │
+                                            └──────┬───────┘                 │  (held out)  │
+                                                   │                         └──────────────┘
+                                                   ▼
+                                            ┌──────────────┐
+                                            │ StandardScale│
+                                            │ (fit on train│
+                                            │  only)       │
+                                            └──────┬───────┘
+                                                   │
+                                                   ▼
+                                            ┌──────────────┐
+                                            │    SMOTE     │
+                                            │ (per CV fold │
+                                            │  via ImbPipe)│
+                                            └──────────────┘
 ```
 
-**Key design decisions for scientific rigor:**
+### 🛡️ Scientific Rigor Guarantees
 
-- **Content-based deduplication** — Removes columns with identical values (not just identical names), eliminating 99 redundant CNV features arising from shared chromosomal loci.
-- **No data leakage** — Scaling is fit exclusively on training data; SMOTE is applied inside cross-validation folds via `imblearn.pipeline.Pipeline`.
-- **Stratified splitting** — Class proportions are preserved in both train and test sets.
-- **Feature name preservation** — Column names are saved as `.npy` arrays for downstream SHAP explainability plots.
+| Principle | Implementation |
+|:---|:---|
+| 🚫 **No Data Leakage** | Scaling fit exclusively on training data; SMOTE applied inside CV folds via `ImbPipeline` |
+| 📊 **Stratified Splitting** | Class proportions preserved in both train and test sets |
+| 🧹 **Content-Based Dedup** | Removes columns with identical *values* (not just names) — eliminates 99 redundant CNV features from shared chromosomal loci |
+| 🏷️ **Feature Name Tracking** | Column names saved as `.npy` arrays for downstream SHAP explainability |
+| 🔒 **Seed Locking** | Fixed seed (42) across NumPy, Python `random`, and `PYTHONHASHSEED` |
 
-### Baseline Evaluation
+### 🤖 Baseline Classifiers
 
-Three classifiers are evaluated using **Stratified 5-Fold Cross-Validation** with SMOTE applied per-fold:
-
-| Classifier | Configuration |
-|---|---|
-| **Random Forest** | 100 estimators, default hyperparameters |
-| **SVM** | RBF kernel, probability estimates enabled |
-| **XGBoost** | Default hyperparameters, logloss evaluation metric |
-
-Metrics reported: Accuracy, F1 (Weighted & Macro), Precision, Recall, ROC-AUC, MCC.
+| Classifier | Configuration | Key Strength |
+|:---|:---|:---|
+| 🌲 **Random Forest** | 100 estimators, parallelized | Robust to noise |
+| 🎯 **SVM** | RBF kernel, probability estimates | Strong on high-dim data |
+| ⚡ **XGBoost** | Logloss metric, parallelized | Best overall performance |
 
 ---
 
-## Project Structure
+## 🏆 Baseline Results
+
+<div align="center">
+
+> 📈 *Stratified 5-Fold Cross-Validation with per-fold SMOTE · Values: **mean ± std***
+
+</div>
+
+### 🔹 ER Status — *Binary Classification*
+
+<table>
+<tr>
+<th>Model</th>
+<th>Accuracy</th>
+<th>F1 (Weighted)</th>
+<th>F1 (Macro)</th>
+<th>ROC-AUC</th>
+<th>MCC</th>
+</tr>
+<tr>
+<td>⚡ <b>XGBoost</b></td>
+<td><b>93.16 ± 2.98</b></td>
+<td><b>93.23 ± 2.85</b></td>
+<td><b>90.97 ± 3.64</b></td>
+<td>95.47 ± 2.82</td>
+<td><b>0.822 ± 0.070</b></td>
+</tr>
+<tr>
+<td>🌲 Random Forest</td>
+<td>92.94 ± 2.43</td>
+<td>92.83 ± 2.42</td>
+<td>90.22 ± 3.20</td>
+<td><b>95.69 ± 3.18</b></td>
+<td>0.808 ± 0.065</td>
+</tr>
+<tr>
+<td>🎯 SVM</td>
+<td>91.57 ± 1.54</td>
+<td>91.21 ± 1.78</td>
+<td>87.76 ± 2.60</td>
+<td>95.23 ± 3.51</td>
+<td>0.769 ± 0.043</td>
+</tr>
+</table>
+
+### 🔹 HER2 Final Status — *Binary Classification*
+
+<table>
+<tr>
+<th>Model</th>
+<th>Accuracy</th>
+<th>F1 (Weighted)</th>
+<th>F1 (Macro)</th>
+<th>ROC-AUC</th>
+<th>MCC</th>
+</tr>
+<tr>
+<td>⚡ <b>XGBoost</b></td>
+<td><b>92.86 ± 2.33</b></td>
+<td><b>92.47 ± 2.73</b></td>
+<td><b>85.32 ± 5.65</b></td>
+<td><b>92.47 ± 5.67</b></td>
+<td><b>0.717 ± 0.106</b></td>
+</tr>
+<tr>
+<td>🌲 Random Forest</td>
+<td>90.56 ± 2.93</td>
+<td>88.95 ± 4.16</td>
+<td>76.79 ± 9.50</td>
+<td>89.04 ± 4.93</td>
+<td>0.592 ± 0.152</td>
+</tr>
+<tr>
+<td>🎯 SVM</td>
+<td>86.87 ± 2.77</td>
+<td>82.53 ± 4.65</td>
+<td>60.57 ± 11.45</td>
+<td>88.89 ± 5.33</td>
+<td>0.330 ± 0.217</td>
+</tr>
+</table>
+
+### 🔹 Histological Type — *Multi-class Classification*
+
+<table>
+<tr>
+<th>Model</th>
+<th>Accuracy</th>
+<th>F1 (Weighted)</th>
+<th>F1 (Macro)</th>
+<th>ROC-AUC</th>
+<th>MCC</th>
+</tr>
+<tr>
+<td>⚡ <b>XGBoost</b></td>
+<td><b>91.67 ± 1.63</b></td>
+<td><b>91.64 ± 1.46</b></td>
+<td><b>86.16 ± 2.14</b></td>
+<td><b>93.77 ± 2.49</b></td>
+<td><b>0.726 ± 0.043</b></td>
+</tr>
+<tr>
+<td>🎯 SVM</td>
+<td>89.36 ± 3.30</td>
+<td>88.52 ± 3.58</td>
+<td>79.78 ± 6.35</td>
+<td>90.56 ± 5.09</td>
+<td>0.615 ± 0.129</td>
+</tr>
+<tr>
+<td>🌲 Random Forest</td>
+<td>88.30 ± 2.18</td>
+<td>87.44 ± 2.29</td>
+<td>77.99 ± 3.99</td>
+<td>91.40 ± 4.24</td>
+<td>0.578 ± 0.083</td>
+</tr>
+</table>
+
+<br/>
+
+<div align="center">
+
+### 💡 Key Findings
+
+</div>
+
+> **XGBoost dominates** across all three clinical targets, achieving the highest accuracy, F1, and MCC scores consistently. Notably:
+> - **ER Status** is the easiest target (93.2% accuracy) — strong biological signal from hormone receptor expression.
+> - **HER2 Status** shows the most room for improvement (MCC: 0.717) — class imbalance makes this a prime candidate for **DC-CRO feature selection**.
+> - **Histological Type** benefits from multi-class handling (91.7% accuracy) — XGBoost's gradient-based optimization handles the 3-class problem well.
+
+---
+
+## 📁 Project Structure
 
 ```
-Multi Omics Cancer - CRO xAI/
+🧬 Multi Omics Cancer - CRO xAI/
 │
-├── data/
-│   └── brca_data_w_subtypes.csv        # Raw TCGA BRCA multi-omics dataset
+├── 📂 data/
+│   └── brca_data_w_subtypes.csv          # Raw TCGA BRCA multi-omics dataset
 │
-├── src/
-│   ├── __init__.py                     # Package initializer
-│   ├── preprocess.py                   # Data loading, deduplication, encoding, SMOTE
-│   ├── baseline.py                     # Stratified CV evaluation with ImbPipeline
-│   └── utils.py                        # Reproducibility (seed locking)
+├── 📂 src/
+│   ├── __init__.py                       # Package initializer
+│   ├── preprocess.py                     # Data loading, deduplication, encoding, SMOTE
+│   ├── baseline.py                       # Stratified CV evaluation with ImbPipeline
+│   └── utils.py                          # Reproducibility (seed locking)
 │
-├── outputs/
-│   ├── baseline_metrics/               # Per-target CSV files with pivoted metrics
+├── 📂 outputs/
+│   ├── baseline_metrics/                 # Per-target CSV results (pivoted)
 │   │   ├── ER.Status_baseline.csv
 │   │   ├── HER2.Final.Status_baseline.csv
 │   │   └── histological.type_baseline.csv
-│   ├── preprocessed/                   # Saved .npy arrays (train/test splits, feature names)
-│   └── figures/                        # Plots (populated in later weeks)
+│   ├── preprocessed/                     # .npy arrays (train/test, feature names)
+│   └── figures/                          # Plots (populated in later weeks)
 │
-├── notebooks/                          # Jupyter notebooks for EDA (future)
-├── reports/                            # Generated reports and figures for thesis
+├── 📂 notebooks/                         # Jupyter notebooks for exploration
+├── 📂 reports/                           # Generated thesis figures & reports
 │
-├── run_week1.py                        # Master script — runs full Week 1 pipeline
-├── requirements.txt                    # Python dependencies
-├── .gitignore
-└── README.md
+├── 🚀 run_week1.py                      # Master script — full Week 1 pipeline
+├── 📋 requirements.txt                  # Python dependencies
+├── 📋 .gitignore
+└── 📋 README.md
 ```
 
 ---
 
-## Installation
+## 🚀 Quick Start
 
-**Prerequisites:** Python 3.9+
+### Prerequisites
+
+![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white)
+![pip](https://img.shields.io/badge/pip-latest-green?logo=pypi&logoColor=white)
+
+### Installation
 
 ```bash
-# 1. Clone the repository
+# Clone the repository
 git clone https://github.com/peashdasrudra/Multi-Omics-Cancer-Classification---CRO-xAI.git
 cd Multi-Omics-Cancer-Classification---CRO-xAI
 
-# 2. Create a virtual environment (recommended)
+# Create & activate virtual environment
 python -m venv .venv
-source .venv/bin/activate        # Linux/macOS
 .venv\Scripts\activate           # Windows
+# source .venv/bin/activate      # Linux/macOS
 
-# 3. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### Dependencies
-
-| Package | Purpose |
-|---|---|
-| `numpy`, `pandas` | Data manipulation |
-| `scikit-learn` | ML models, preprocessing, evaluation |
-| `imbalanced-learn` | SMOTE oversampling & ImbPipeline |
-| `xgboost` | Gradient boosted classifier |
-| `matplotlib`, `seaborn` | Visualization |
-| `joblib` | Model serialization |
-
----
-
-## Usage
-
-### Run the Full Week 1 Pipeline
+### Run the Pipeline
 
 ```bash
 python run_week1.py
 ```
 
-This will:
-1. Load and deduplicate the raw multi-omics dataset
-2. For each clinical target (ER Status, HER2 Status, Histological Type):
-   - Encode labels, split data (80/20 stratified), scale features
-   - Save pre-SMOTE data for leakage-free CV evaluation
-   - Apply SMOTE and save resampled data for future DC-CRO use
-   - Run baseline evaluation (RF, SVM, XGBoost) with Stratified 5-Fold CV
-   - Export metrics to CSV
+<details>
+<summary>📝 <b>What does it do?</b> (click to expand)</summary>
 
-All outputs are saved to the `outputs/` directory.
+<br/>
 
----
+1. 📥 Loads and deduplicates the raw multi-omics dataset (1,936 → 1,837 features)
+2. For each of the 3 clinical targets:
+   - 🏷️ Encodes labels and splits data (80/20 stratified)
+   - 📏 Scales features (StandardScaler, fit on train only)
+   - 💾 Saves pre-SMOTE data for leakage-free CV evaluation
+   - ⚖️ Applies SMOTE and saves resampled data for future DC-CRO
+   - 🤖 Runs baseline evaluation (RF, SVM, XGBoost) with Stratified 5-Fold CV
+   - 📊 Exports metrics to CSV
 
-## Baseline Results
+</details>
 
-> Results from Stratified 5-Fold Cross-Validation with per-fold SMOTE. Values reported as **mean ± std**.
+### Dependencies
 
-### ER Status (Binary: Positive / Negative)
-
-| Model | Accuracy | F1 (Weighted) | F1 (Macro) | ROC-AUC | MCC |
-|---|---|---|---|---|---|
-| **XGBoost** | **0.9316 ± 0.0298** | **0.9323 ± 0.0285** | **0.9097 ± 0.0364** | 0.9547 ± 0.0282 | **0.8220 ± 0.0698** |
-| Random Forest | 0.9294 ± 0.0243 | 0.9283 ± 0.0242 | 0.9022 ± 0.0320 | **0.9569 ± 0.0318** | 0.8078 ± 0.0649 |
-| SVM | 0.9157 ± 0.0154 | 0.9121 ± 0.0178 | 0.8776 ± 0.0260 | 0.9523 ± 0.0351 | 0.7690 ± 0.0431 |
-
-### HER2 Final Status (Binary: Positive / Negative)
-
-| Model | Accuracy | F1 (Weighted) | F1 (Macro) | ROC-AUC | MCC |
-|---|---|---|---|---|---|
-| **XGBoost** | **0.9286 ± 0.0233** | **0.9247 ± 0.0273** | **0.8532 ± 0.0565** | **0.9247 ± 0.0567** | **0.7168 ± 0.1057** |
-| Random Forest | 0.9056 ± 0.0293 | 0.8895 ± 0.0416 | 0.7679 ± 0.0950 | 0.8904 ± 0.0493 | 0.5921 ± 0.1516 |
-| SVM | 0.8687 ± 0.0277 | 0.8253 ± 0.0465 | 0.6057 ± 0.1145 | 0.8889 ± 0.0533 | 0.3303 ± 0.2167 |
-
-### Histological Type (Multi-class)
-
-| Model | Accuracy | F1 (Weighted) | F1 (Macro) | ROC-AUC | MCC |
-|---|---|---|---|---|---|
-| **XGBoost** | **0.9167 ± 0.0163** | **0.9164 ± 0.0146** | **0.8616 ± 0.0214** | **0.9377 ± 0.0249** | **0.7255 ± 0.0428** |
-| SVM | 0.8936 ± 0.0330 | 0.8852 ± 0.0358 | 0.7978 ± 0.0635 | 0.9056 ± 0.0509 | 0.6148 ± 0.1290 |
-| Random Forest | 0.8830 ± 0.0218 | 0.8744 ± 0.0229 | 0.7799 ± 0.0399 | 0.9140 ± 0.0424 | 0.5775 ± 0.0834 |
-
-**Key takeaway:** XGBoost consistently outperforms RF and SVM across all targets. The HER2 target shows the most room for improvement (lower MCC), making it a prime candidate for DC-CRO feature selection.
+| Package | Purpose |
+|:---|:---|
+| `numpy` · `pandas` | Data manipulation & analysis |
+| `scikit-learn` | ML models, preprocessing, evaluation metrics |
+| `imbalanced-learn` | SMOTE oversampling & ImbPipeline |
+| `xgboost` | Gradient boosted tree classifier |
+| `matplotlib` · `seaborn` | Visualization & plotting |
+| `joblib` | Model serialization & persistence |
 
 ---
 
-## Roadmap
+## 🗺️ Roadmap
 
-| Week | Milestone | Status |
-|---|---|---|
-| **Week 1** | Data preprocessing, deduplication, baseline evaluation | ✅ Complete |
-| **Week 2** | DC-CRO metaheuristic skeleton & feature selection | 🔲 Planned |
-| **Week 3** | DC-CRO integration with classifiers, hyperparameter tuning | 🔲 Planned |
-| **Week 4** | SHAP-based explainability analysis | 🔲 Planned |
-| **Week 5** | Final evaluation, thesis write-up, and figures | 🔲 Planned |
+<table>
+<tr>
+<th>Week</th>
+<th>Milestone</th>
+<th>Status</th>
+</tr>
+<tr>
+<td align="center"><b>1</b></td>
+<td>📊 Data preprocessing, content-based deduplication, baseline evaluation (RF, SVM, XGBoost)</td>
+<td align="center">✅ <b>Complete</b></td>
+</tr>
+<tr>
+<td align="center"><b>2</b></td>
+<td>⚡ DC-CRO metaheuristic skeleton & feature selection engine</td>
+<td align="center">🔄 In Progress</td>
+</tr>
+<tr>
+<td align="center"><b>3</b></td>
+<td>🔗 DC-CRO integration with classifiers & hyperparameter tuning</td>
+<td align="center">📅 Planned</td>
+</tr>
+<tr>
+<td align="center"><b>4</b></td>
+<td>🔍 SHAP-based explainability analysis & feature importance</td>
+<td align="center">📅 Planned</td>
+</tr>
+<tr>
+<td align="center"><b>5</b></td>
+<td>📝 Final evaluation, comparison tables, thesis write-up & figures</td>
+<td align="center">📅 Planned</td>
+</tr>
+</table>
 
 ---
 
-## Reproducibility
+## 🔄 Reproducibility
 
-All experiments use a fixed random seed (`42`) locked across NumPy, Python's `random` module, and `PYTHONHASHSEED`. Results are fully reproducible given the same environment and dataset.
+All experiments use a **fixed random seed (`42`)** locked across:
+
+- 🔢 **NumPy** — `np.random.seed(42)`
+- 🐍 **Python** — `random.seed(42)`
+- #️⃣ **Hash Seed** — `PYTHONHASHSEED=42`
+
+Results are **100% reproducible** given the same environment, dataset, and library versions.
 
 ---
 
-## License
+## 📜 License
 
 This project is part of an academic thesis. All rights reserved.
 
 ---
 
-<p align="center">
-  <i>Built for the Department of Computer Science, University of Dhaka</i>
-</p>
+<div align="center">
+
+<br/>
+
+**Department of Computer Science & Engineering**
+
+**Northern University of Business & Technology Khulna**
+
+<br/>
+
+*Made with 🧬 for precision oncology research*
+
+</div>
