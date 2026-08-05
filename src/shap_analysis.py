@@ -240,10 +240,11 @@ def plot_omics_attribution(attr_df):
         # Add value labels on bars
         for bar in bars:
             height = bar.get_height()
-            if height > 2:  # Only label bars > 2%
+            if height > 0:  # Label all non-zero bars
+                fmt_str = f"{height:.2f}%" if height < 1 else f"{height:.1f}%"
                 ax.text(
                     bar.get_x() + bar.get_width() / 2., height + 0.8,
-                    f"{height:.1f}%", ha="center", va="bottom",
+                    fmt_str, ha="center", va="bottom",
                     fontsize=9, fontweight="bold"
                 )
 

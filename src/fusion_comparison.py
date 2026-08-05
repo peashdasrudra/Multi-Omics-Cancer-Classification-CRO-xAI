@@ -44,19 +44,19 @@ from src.utils import print_step
 
 def get_early_fusion_results(all_results):
     """
-    Early Fusion = Stacking Ensemble result from Day 3.
-    It already concatenates all omics features into a single model.
+    Early Fusion = LightGBM (tuned) result from Day 3.
+    It is the best single model trained on concatenated features.
     """
-    print_step(32, "Early Fusion (= Stacking Ensemble from Day 3)")
+    print_step(32, "Early Fusion (= LightGBM (tuned) from Day 3)")
 
-    if "Stacking Ensemble" in all_results:
-        stacking = all_results["Stacking Ensemble"]
-        f1 = stacking["f1_macro"][0]
-        auc = stacking["roc_auc"][0]
+    if "LightGBM (tuned)" in all_results:
+        lgbm = all_results["LightGBM (tuned)"]
+        f1 = lgbm["f1_macro"][0]
+        auc = lgbm["roc_auc"][0]
         print(f"       F1-Macro: {f1:.4f}, AUC-ROC: {auc:.4f}")
-        return stacking
+        return lgbm
     else:
-        print("       [!] Stacking Ensemble results not found!")
+        print("       [!] LightGBM (tuned) results not found!")
         return None
 
 
@@ -153,13 +153,13 @@ def build_fusion_comparison_table(early_results, late_metrics):
 
     rows = []
 
-    # Early Fusion (from Stacking results)
+    # Early Fusion (from LightGBM results)
     if early_results:
         rows.append({
-            "Fusion Strategy": "Early Fusion (concat -> Stacking)",
+            "Fusion Strategy": "Early Fusion (concat -> LightGBM)",
             "F1-Macro": f"{early_results['f1_macro'][0]:.4f} ± {early_results['f1_macro'][1]:.4f}",
             "AUC-ROC": f"{early_results['roc_auc'][0]:.4f} ± {early_results['roc_auc'][1]:.4f}",
-            "Model": "Stacking (RF + XGB + LightGBM)",
+            "Model": "LightGBM (tuned)",
         })
 
     # Late Fusion

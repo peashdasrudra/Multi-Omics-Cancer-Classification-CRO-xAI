@@ -101,7 +101,7 @@ python 02_run_supplementary_analysis.py
 
 ### Key Benchmark Discoveries
 
-1. **Late Fusion Superiority**: Training per-omics specialized XGBoost classifiers and soft-voting their decision probabilities achieves **$\text{F1-Macro} = 0.9247$** and **$\text{AUC-ROC} = 0.9839$**, outperforming Early Fusion concatenated stacking ($\text{F1-Macro} = 0.8959$).
+1. **Late Fusion Superiority**: Training per-omics specialized XGBoost classifiers and soft-voting their decision probabilities achieves **$\text{F1-Macro} = 0.9247$** and **$\text{AUC-ROC} = 0.9839$**, outperforming the best Early Fusion concatenated model, LightGBM (**$\text{F1-Macro} = 0.9054$**).
 2. **Dual-Perspective Biomarker Attribution**: Cross-Omics SHAP Attribution identifies the **mRNA Expression** layer as the largest total contributor ($54.95\%$), while the **Protein (RPPA)** layer demonstrates the highest per-feature attribution density ($40.26\%$ from $32\%$ of features) and is confirmed as the most indispensable modality by ablation analysis. **E-Cadherin (`pp_E.Cadherin`)** is identified as the single most critical feature (Rank #1 in $5/5$ CV splits).
 3. **Leakage Verification**: Nested Cross-Validation (outer 5-fold, inner 5-fold) verifies that feature selection and SMOTE pipeline integration incur negligible optimistic bias ($\Delta \text{F1-Macro} = 0.0213 < 0.0300$).
 
@@ -263,7 +263,7 @@ The dataset comprises **705 primary breast cancer patients** from the Cancer Gen
 
 | Strategy | Architecture | F1-Macro | AUC-ROC |
 |:---|:---|:---:|:---:|
-| **Early Fusion** | Concatenated 75 features $\rightarrow$ Stacking Ensemble | 0.8959 ± 0.0188 | 0.9655 ± 0.0269 |
+| **Early Fusion** | Concatenated 75 features $\rightarrow$ LightGBM (tuned) | 0.9054 ± 0.0195 | 0.9602 ± 0.0336 |
 | **Late Fusion** | Per-Omics XGBoost models $\rightarrow$ Soft-voting | **0.9247** | **0.9839** |
 
 *Finding*: Late fusion demonstrates superior performance because training independent classifiers on individual omics modalities allows each model to optimize decision boundaries tailored to specific biophysical data distributions before probabilistic aggregation.
