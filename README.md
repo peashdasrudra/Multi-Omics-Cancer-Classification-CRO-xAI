@@ -1,6 +1,6 @@
 # Explainable Multi-Omics Breast Cancer Classification
 
-**Consensus Feature Selection, Ensemble Learning, and Cross-Omics SHAP Attribution on TCGA-BRCA**
+**Consensus Feature Selection, Cross-Omics SHAP Attribution on TCGA-BRCA**
 
 <div align="center">
   <img src="outputs/figures/fig_08_omics_attribution.png" alt="Cross-Omics SHAP Attribution" width="800"/>
